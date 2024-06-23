@@ -21,6 +21,6 @@ class MyApp extends StatelessWidget {
 }
 
 class Globals {
-  //TODO: modificar para o ip da máquina
-  static const String httpServerUrl = 'http://172.16.9.210:8080';
+  //TODO: modificar para o ip da máquina / servidor
+  static const String httpServerUrl = 'http://10.0.2.2:8080';
 }
