@@ -1,8 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
+import '../main.dart';
 import 'Situacao.dart';
+import 'autenticacao/Login.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -24,6 +26,78 @@ class _HomeState extends State<Home> {
       {'nome': 'Fiscal', 'descricao': 'Carro comum', 'latitude': '-29.8188', 'longitude': '-53.3807'},
     ],
   ];
+
+  //TODO: buscar o nome do usuário logado do backend
+  String userName = "Nome do Usuário";
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Início'),
+        automaticallyImplyLeading: false, // Remove o botão de voltar
+        actions: <Widget>[
+          PopupMenuButton<int>(
+            onSelected: (item) => onSelected(context, item),
+            itemBuilder: (context) => [
+              PopupMenuItem<int>(
+                value: -1,
+                enabled: false, // Valor que não corresponde a nenhuma ação
+                child: Text(userName, style: const TextStyle(fontSize: 20)), // Desabilita a seleção deste item
+              ),
+              const PopupMenuItem<int>(
+                value: 0,
+                child: Text('Logout'),
+              ),
+            ],
+            icon: const Icon(Icons.person),
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        itemCount: agentes.length,
+        itemBuilder: (context, index) {
+          return Card(
+            child: Column(
+              children: [
+                ListTile(
+                  title: Text('Lista de Agentes ${index + 1}'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: () => _editSituacao(index),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () => _deleteSituation(index),
+                      ),
+                    ],
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Situacao(agentes: agentes[index]),
+                      ),
+                    );
+                  },
+                ),
+                Image.network('https://th.bing.com/th/id/OIP.4xUwZLLE24q97yTVCkrw1QHaG6?w=623&h=582&rs=1&pid=ImgDetMain', width: double.infinity, height: 100, alignment: Alignment.center, fit: BoxFit.cover), // Imagem genérica
+              ],
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: _addNewSituacao,
+      ),
+    );
+  }
+
 
   void _addNewSituacao() {
     final _startDateController = TextEditingController();
@@ -135,48 +209,31 @@ class _HomeState extends State<Home> {
     //TODO: implementar a exclusão de situações no backend
   }
 
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Início'),
-      ),
+  void onSelected(BuildContext context, int item) {
+    switch (item) {
+      case 0:
+        _logout();
+        break;
+    }
+  }
 
-      //TODO: alterar campos de teste para campos reais
-      body: ListView.builder(
-        itemCount: agentes.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text('Lista de Agentes ${index + 1}'),
-            onTap: () {
-              print('Você clicou na situacao ${index + 1}');
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Situacao(agentes: agentes[index]),
-                  )
-              );
-            },
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                IconButton(
-                  icon: Icon(Icons.edit),
-                  onPressed: () => _editSituacao(index),
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete),
-                  onPressed: () => _deleteSituation(index),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+  //TODO: simplificar a função de logout, removendo a necessidade de enviar uma requisição ao backend
+  void _logout() async {
+    var url = Uri.parse('${Globals.httpServerUrl}/login/logout');
+    var response = await http.get(url);
 
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: _addNewSituacao,
-      ),
-    );
+    if (response.statusCode == 200) {
+      // Logout bem-sucedido, redirecionar para a tela de login
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => Login()),
+            (Route<dynamic> route) => false,
+      );
+    } else {
+      // Tratar erro de logout
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Falha no logout"),
+      ));
+    }
   }
 }
