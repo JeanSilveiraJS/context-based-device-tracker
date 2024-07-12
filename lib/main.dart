@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:gps_device_manager/screens/Login.dart';
+import 'package:gps_device_manager/screens/autenticacao/Login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,4 +18,9 @@ class MyApp extends StatelessWidget {
         home: const Login()
     );
   }
+}
+
+class Globals {
+  //TODO: modificar para o ip da máquina
+  static const String httpServerUrl = 'http://172.16.9.210:8080';
 }
