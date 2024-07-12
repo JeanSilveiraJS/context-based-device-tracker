@@ -31,6 +31,12 @@ dependencies:
   flutter:
     sdk: flutter
   intl: ^0.17.0
+  flutter_modular: any
+  sqflite:
+  path:
+  http: ^0.13.4
+  google_maps_flutter: ^2.6.1
+
   #location: ^4.3.0 #TODO: verificar compatibilidade de versões (location x dart / flutter)
 
 
@@ -41,7 +47,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  google_maps_flutter: ^2.6.1
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
