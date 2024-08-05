@@ -1,9 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:gps_device_manager/services/UsuarioService.dart';
 import 'package:http/http.dart' as http;
+
 import 'package:gps_device_manager/screens/autenticacao/Login.dart';
 
+import '../../app-core/model/UsuarioModel.dart';
 import '../../main.dart';
-import '../Home.dart';
+import '../home.dart';
 
 class Cadastro extends StatefulWidget {
   const Cadastro({super.key});
@@ -13,19 +18,18 @@ class Cadastro extends StatefulWidget {
 }
 
 class _CadastroState extends State<Cadastro> {
-
   final _formKey = GlobalKey<FormState>();
 
-  String nome = '';
-  String email = '';
-  String senha = '';
+  late String nome;
+  late String email;
+  late String senha;
 
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text("Cadastro"),
+        title: const Text("Cadastro"),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -34,62 +38,42 @@ class _CadastroState extends State<Cadastro> {
             child: Column(
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 15.0, right: 15.0, top: 15, bottom: 15),
-                  child:  TextFormField(
-                    autofocus: true,
-                    onSaved: (valor){
-                      nome = valor!;
-                    },
-                    validator: (valor){
-                      if(valor == null || valor.isEmpty){
-                        return 'Digite um nome válido';
-                      }
-                      return null;
-                    },
+                  padding: const EdgeInsets.all(15.0),
+                  child: TextFormField(
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Nome',
-                        hintText: 'Nome Sobrenome'),
+                      labelText: 'Nome',
+                      border: OutlineInputBorder(),
+                    ),
+                    onSaved: (valor) => nome = valor ?? '',
+                    validator: (valor) =>
+                        valor?.isEmpty ?? true ? 'Digite um nome válido' : null,
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 15.0, right: 15.0, bottom: 15),
-                  child:  TextFormField(
-                    onSaved: (valor){
-                      email = valor!;
-                    },
-                    validator: (valor){
-                      if(valor == null || valor.isEmpty){
-                        return 'Digite um email válido';
-                      }
-                      return null;
-                    },
+                  padding: const EdgeInsets.all(15.0),
+                  child: TextFormField(
                     decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Email',
-                        hintText: 'nome@mail.com'),
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
+                    onSaved: (valor) => email = valor ?? '',
+                    validator: (valor) => valor?.isEmpty ?? true
+                        ? 'Digite um email válido'
+                        : null,
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(
-                      left: 15.0, right: 15.0, bottom:15),
-                  //padding: EdgeInsets.symmetric(horizontal: 15),
-                  child:  TextFormField(
-                    onSaved: (valor){
-                      senha = valor!;
-                    },
-                    validator: (valor){
-                      if(valor == null || valor.isEmpty){
-                        return 'Digite uma senha';
-                      }
-                      return null;
-                    },
+                  padding: const EdgeInsets.all(15.0),
+                  child: TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Senha',
+                      border: OutlineInputBorder(),
+                    ),
+                    onSaved: (valor) => senha = valor ?? '',
+                    validator: (valor) => valor?.isEmpty ?? true
+                        ? 'Digite uma senha válida'
+                        : null,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Senha'),
                   ),
                 ),
                 Container(
@@ -101,13 +85,13 @@ class _CadastroState extends State<Cadastro> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextButton(
-                    onPressed: () {
-                      if(_formKey.currentState!.validate()){
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
                         _formKey.currentState!.save();
-                        _cadastrar(nome, email, senha);
+                        _cadastrar();
                       }
                     },
-                    child: Text(
+                    child: const Text(
                       'Cadastrar',
                       style: TextStyle(color: Colors.white, fontSize: 25),
                     ),
@@ -117,10 +101,10 @@ class _CadastroState extends State<Cadastro> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => Login()),
+                      MaterialPageRoute(builder: (context) => const Login()),
                     );
                   },
-                  child: Text(
+                  child: const Text(
                     'Já tenho uma conta',
                     style: TextStyle(color: Colors.blue, fontSize: 15),
                   ),
@@ -132,28 +116,24 @@ class _CadastroState extends State<Cadastro> {
       ),
     );
   }
-  _cadastrar(String nome, String login, String senha) async {
-    var url = Uri.parse('${Globals.httpServerUrl}/usuario');
-    var response = await http.post(url, body: {
-      'nome': nome,
-      'login': login,
-      'senha': senha,
-    });
 
-    if(response.statusCode == 200){
-      // Cadastro bem-sucedido, redirecionar para a tela de login
-      Navigator.pushAndRemoveUntil(
+  void _cadastrar() async {
+    final response = await UsuarioService().cadastrar(UsuarioModel.persistence(nome: nome, login: email, senha: senha));
+
+    if (response != null) {
+      _showMessage('Cadastro realizado com sucesso');
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => Home()),
-        (route) => false,
+        MaterialPageRoute(builder: (context) => const Home()),
       );
     } else {
-      // Cadastro mal-sucedido, exibir mensagem de erro
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao cadastrar usuário'),
-        ),
-      );
+      _showMessage('Erro ao realizar cadastro');
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+    ));
   }
 }
